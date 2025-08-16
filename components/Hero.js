@@ -14,9 +14,7 @@ export default function Hero() {
           <OrbitControls enableZoom={false} />
           <ambientLight intensity={0.6} />
           <directionalLight position={[2, 2, 1]} />
-          <Sphere args={[1, 100, 200]} scale={1.7}>
-            <MeshDistortMaterial distort={0.35} speed={2} roughness={0} color="#4f46e5" />
-          </Sphere>
+          
         </Canvas>
       </div>
 
