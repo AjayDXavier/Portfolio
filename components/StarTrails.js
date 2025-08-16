@@ -2,52 +2,40 @@
 import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useRef, useMemo, useEffect } from "react";
+import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import gsap from "gsap";
 
 // Component for the star field
 function Stars() {
-  const pointsRef = useRef();
-  const trailCount = 5; // number of previous positions per star
+  const meshRef = useRef();
+  const trailCount = 1; // we drop trails for smoother glow spheres
+  const numStars = 500;
 
-  // Initialize stars
+  // Star data
   const starData = useMemo(() => {
     const stars = [];
-    const numStars = 500; // keep performance in mind
     for (let i = 0; i < numStars; i++) {
       const radius = THREE.MathUtils.randFloat(50, 100);
       const angle = Math.random() * Math.PI * 2;
       const y = THREE.MathUtils.randFloatSpread(50);
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
-      // store current + previous positions for trail
       stars.push({
-        positions: Array(trailCount).fill([x, y, z]),
+        pos: new THREE.Vector3(x, y, z),
         angle,
         radius,
         speed: THREE.MathUtils.randFloat(0.0005, 0.0012),
+        color: new THREE.Color().setHSL(Math.random(), 0.7, 0.6), // add random colors
       });
     }
     return stars;
   }, []);
 
-  // Flatten all positions into a single Float32Array
-  const positions = useMemo(() => {
-    const arr = new Float32Array(starData.length * trailCount * 3);
-    starData.forEach((star, i) => {
-      star.positions.forEach((pos, j) => {
-        arr[(i * trailCount + j) * 3] = pos[0];
-        arr[(i * trailCount + j) * 3 + 1] = pos[1];
-        arr[(i * trailCount + j) * 3 + 2] = pos[2];
-      });
-    });
-    return arr;
-  }, [starData]);
-
   // Scroll-controlled rotation
   useEffect(() => {
     const handleScroll = () => {
       const normalizedScroll = window.scrollY / window.innerHeight;
-      gsap.to(pointsRef.current.rotation, {
+      gsap.to(meshRef.current.rotation, {
         y: normalizedScroll * Math.PI * 2,
         duration: 1.5,
         ease: "power2.out",
@@ -57,53 +45,30 @@ function Stars() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Animate stars & trails
-useFrame(() => {
-  const array = pointsRef.current.geometry.attributes.position.array;
+  // Animate star positions
+  useFrame(() => {
+    const dummy = new THREE.Object3D();
+    starData.forEach((star, i) => {
+      const y = star.pos.y;
+      const x = Math.cos(star.angle) * star.radius;
+      const z = Math.sin(star.angle) * star.radius;
+      star.pos.set(x, y, z);
+      star.angle += star.speed;
 
-  starData.forEach((star, i) => {
-    // shift trail positions
-    star.positions.pop();
-
-    // keep Y steady to reduce shimmer
-    const y = star.positions[0][1]; 
-    const x = Math.cos(star.angle) * star.radius;
-    const z = Math.sin(star.angle) * star.radius;
-    star.positions.unshift([x, y, z]);
-
-    // slowly rotate
-    star.angle += star.speed;
-
-    // update buffer geometry
-    star.positions.forEach((pos, j) => {
-      array[(i * trailCount + j) * 3] = pos[0];
-      array[(i * trailCount + j) * 3 + 1] = pos[1];
-      array[(i * trailCount + j) * 3 + 2] = pos[2];
+      dummy.position.copy(star.pos);
+      dummy.updateMatrix();
+      meshRef.current.setMatrixAt(i, dummy.matrix);
+      meshRef.current.setColorAt(i, star.color);
     });
+    meshRef.current.instanceMatrix.needsUpdate = true;
+    meshRef.current.instanceColor.needsUpdate = true;
   });
 
-  pointsRef.current.geometry.attributes.position.needsUpdate = true;
-});
-
-
   return (
-    <points ref={pointsRef}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          count={positions.length / 3}
-          array={positions}
-          itemSize={3}
-        />
-      </bufferGeometry>
-      <pointsMaterial
-        color="#ffffff"
-        size={1.0}
-        sizeAttenuation
-        transparent
-        opacity={0.7}
-      />
-    </points>
+    <instancedMesh ref={meshRef} args={[null, null, numStars]}>
+      <sphereGeometry args={[0.6, 16, 16]} /> {/* bigger, smoother spheres */}
+      <meshStandardMaterial emissiveIntensity={1.5} emissive="#ffffff" />
+    </instancedMesh>
   );
 }
 
@@ -111,7 +76,20 @@ useFrame(() => {
 export default function StarTrails() {
   return (
     <Canvas camera={{ position: [0, 0, 150], fov: 75 }}>
+      {/* lighting for glow effect */}
+      <ambientLight intensity={0.5} />
+      <pointLight position={[0, 0, 200]} intensity={2} color="#ffffff" />
+
       <Stars />
+
+      {/* Bloom effect for glow */}
+      <EffectComposer>
+        <Bloom
+          intensity={2.5}
+          luminanceThreshold={0}
+          luminanceSmoothing={0.9}
+        />
+      </EffectComposer>
     </Canvas>
   );
 }
