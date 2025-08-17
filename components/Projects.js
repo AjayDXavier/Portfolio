@@ -1,14 +1,36 @@
+// components/Projects.js
+
 "use client";
 import { motion } from "framer-motion";
+import Image from "next/image"; // For optimized images
 
 const fadeInUp = { hidden: { opacity: 0, y: 24 }, show: { opacity: 1, y: 0, transition: { duration: 0.6 } } };
 const stagger = { show: { transition: { staggerChildren: 0.12 } } };
 
 export default function Projects() {
+  // 1. Updated the projects array to include image and tags
   const projects = [
-    { title: "3D Portfolio Website", description: "Next.js + Three.js interactive portfolio.", link: "#" },
-    { title: "AI-Powered App", description: "Real-time predictions with a clean UI.", link: "#" },
-    { title: "IoT Dashboard", description: "Live telemetry & alerts dashboard.", link: "#" },
+    { 
+      title: "3D Portfolio Website", 
+      description: "Next.js + Three.js interactive portfolio.", 
+      link: "#",
+      image: "/project-portfolio.jpg", // Example image path
+      tags: ["Next.js", "Three.js", "Framer Motion"],
+    },
+    { 
+      title: "AI-Powered App", 
+      description: "Real-time predictions with a clean UI.", 
+      link: "#",
+      image: "/project-ai-app.jpg", // Example image path
+      tags: ["Python", "React", "FastAPI"],
+    },
+    { 
+      title: "IoT Dashboard", 
+      description: "Live telemetry & alerts dashboard.", 
+      link: "#",
+      image: "/project-iot.jpg", // Example image path
+      tags: ["React", "MQTT", "Node.js"],
+    },
   ];
 
   return (
@@ -22,20 +44,41 @@ export default function Projects() {
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, amount: 0.2 }}
-          className="grid sm:grid-cols-2 md:grid-cols-3 gap-6"
+          className="grid sm:grid-cols-2 md:grid-cols-3 gap-8"
         >
           {projects.map((p) => (
             <motion.a
               variants={fadeInUp}
               key={p.title}
               href={p.link}
-              className="group bg-white rounded-xl border hover:shadow-lg transition p-6 flex flex-col"
+              className="group bg-white rounded-xl border overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col"
             >
-              <h3 className="text-xl font-semibold">{p.title}</h3>
-              <p className="mt-2 text-gray-600 flex-1">{p.description}</p>
-              <span className="mt-4 inline-flex items-center gap-1">
-                View Project <span className="transition group-hover:translate-x-0.5">→</span>
-              </span>
+              {/* 2. Added Image container with hover effect */}
+              <div className="relative h-48 overflow-hidden">
+                <Image
+                  src={p.image}
+                  alt={`Screenshot of ${p.title}`}
+                  fill
+                  style={{ objectFit: 'cover' }}
+                  className="transition-transform duration-500 group-hover:scale-105"
+                />
+              </div>
+              <div className="p-6 flex flex-col flex-1">
+                <h3 className="text-xl font-semibold">{p.title}</h3>
+                <p className="mt-2 text-gray-600 flex-1">{p.description}</p>
+                {/* 3. Added technology tags */}
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {p.tags.map((tag) => (
+                    <span key={tag} className="px-2 py-1 text-xs rounded-md bg-gray-100 text-gray-800 font-medium">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                {/* 4. Enhanced "View Project" link */}
+                <span className="mt-6 font-semibold text-blue-600 inline-flex items-center gap-1">
+                  View Project <span className="transition-transform group-hover:translate-x-1">→</span>
+                </span>
+              </div>
             </motion.a>
           ))}
         </motion.div>
