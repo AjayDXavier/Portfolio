@@ -8,10 +8,10 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-20 bg-white/70 backdrop-blur border-b border-gray-200">
+    <nav className="fixed top-0 left-0 right-0 z-20 bg-black/70 backdrop-blur border-b border-black-200">
       <div className="max-w-6xl mx-auto px-4">
-        <div className="h-14 flex items-center justify-between">
-          <a href="#" className="font-bold">Ajay</a>
+        <div className="h-28 flex items-center justify-between">
+          <a href="#" className="font-bold text-xl">Ajay</a>
 
           {/* 3. Desktop Menu (hidden on mobile) */}
           <div className="hidden md:flex gap-6 text-sm">
